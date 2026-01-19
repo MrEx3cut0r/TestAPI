@@ -1,0 +1,8 @@
+[project]
+name = "crypto-price-tracker"
+version = "0.1.0"
+description = "Deribit crypto price tracker with FastAPI"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
