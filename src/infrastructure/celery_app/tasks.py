@@ -19,35 +19,44 @@ def fetch_market_prices_task(self, tickers: List[str] = None):
     
     try:        
         result = asyncio.run(async_fetch_prices(tickers))
+        
+        logger.info(f"Successfully fetched {result['prices_fetched']} prices")
         return result
         
     except Exception as e:
         logger.error(f"Price fetch task failed: {str(e)}")
         retry_count = self.request.retries
-        countdown = 2 ** retry_count 
-        
+        countdown = 2 ** retry_count
         raise self.retry(exc=e, countdown=countdown)
 
 
 async def async_fetch_prices(tickers: List[str]):
     try:
-        async for session in db_manager.get_session():
-            deribit_client = DeribitClient(settings.DERIBIT_API_URL)
-            price_repository = PriceRepositoryImpl(session)
-            
-            fetch_uc = FetchMarketPricesUseCase(
-                market_data_provider=deribit_client,
-                price_repository=price_repository
-            )
-            
-            prices = await fetch_uc.execute(tickers)
-            
-            logger.info(f"Successfully fetched {len(prices)} prices")
-            return {
-                'success': True,
-                'prices_fetched': len(prices) if prices else 0,
-                'tickers': tickers
-            }
+        async with db_manager.async_session_factory() as session:
+            try:
+                deribit_client = DeribitClient(settings.DERIBIT_API_URL)
+                price_repository = PriceRepositoryImpl(session)
+                
+                fetch_uc = FetchMarketPricesUseCase(
+                    market_data_provider=deribit_client,
+                    price_repository=price_repository
+                )
+                
+                prices = await fetch_uc.execute(tickers)
+                
+                await session.commit()
+                
+                logger.info(f"Successfully fetched {len(prices)} prices")
+                return {
+                    'success': True,
+                    'prices_fetched': len(prices) if prices else 0,
+                    'tickers': tickers
+                }
+                
+            except Exception as e:
+                await session.rollback()
+                raise
+                
     except Exception as e:
         logger.error(f"Error in async_fetch: {str(e)}")
         raise

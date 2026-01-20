@@ -7,7 +7,8 @@ from src.domain.entities.price import Price
 from src.infrastructure.database.models.price_model import PriceModel
 
 
-class PriceRepositoryImpl(PriceRepository):    
+class PriceRepositoryImpl(PriceRepository):
+    
     def __init__(self, session: AsyncSession):
         self.session = session
     
@@ -22,7 +23,7 @@ class PriceRepositoryImpl(PriceRepository):
                 price_model = existing
         
         self.session.add(price_model)
-        await self.session.flush()
+        await self.session.flush([price_model])
         await self.session.refresh(price_model)
         
         return price_model.to_domain()
@@ -74,9 +75,7 @@ class PriceRepositoryImpl(PriceRepository):
     async def batch_save(self, prices: List[Price]) -> List[Price]:
         saved_prices = []
         
-        for price in prices:
-            saved_price = await self.save(price)
-            saved_prices.append(saved_price)
+        price_models = [PriceModel.from_domain(price) for price in prices]
+        self.session.add_all(price_models)
         
-        await self.session.commit()
-        return saved_prices
+        return [price_model.to_domain() for price_model in price_models]

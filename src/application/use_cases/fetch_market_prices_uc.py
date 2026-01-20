@@ -2,10 +2,9 @@ from typing import List
 from src.domain.ports.market_data_provider import MarketDataProvider
 from src.domain.ports.price_repository import PriceRepository
 from src.domain.entities.price import Price
-from src.domain.value_objects.currency import CurrencyPair
 
 
-class FetchMarketPricesUseCase:    
+class FetchMarketPricesUseCase:
     def __init__(
         self, 
         market_data_provider: MarketDataProvider,
@@ -15,12 +14,10 @@ class FetchMarketPricesUseCase:
         self.price_repository = price_repository
     
     async def execute(self, tickers: List[str] = None) -> List[Price]:
-
         if tickers is None:
-            tickers = CurrencyPair.list()
+            tickers = ["btc_usd", "eth_usd"]
         
         prices_dict = await self.market_data_provider.get_index_prices(tickers)
-        
         prices = list(prices_dict.values())
         
         if prices:
