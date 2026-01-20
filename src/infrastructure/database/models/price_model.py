@@ -1,9 +1,8 @@
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, Float, BigInteger, Index
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
-
 
 class PriceModel(Base):    
     __tablename__ = "prices"

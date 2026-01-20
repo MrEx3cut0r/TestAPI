@@ -6,7 +6,7 @@ from src.presentation.middleware.logging_middleware import LoggingMiddleware
 from src.infrastructure.config.logging_config import setup_logging
 from src.infrastructure.database.session import db_manager
 from src.presentation.api.v1.prices import router as prices_router
-
+import time
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
